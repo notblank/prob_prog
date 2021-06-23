@@ -22,7 +22,7 @@
     (+ (sq n) (g (- n 1)))))
 
 ; stackoverflow: functions to be executed are stored in the stack.
-; executed functions are poped from the stack
+; executed functions are popped from the stack
 ; it is better to have a function execution at the end.
 ; in g after evaluating g[n-1] we need to add it to sq[n]
 
