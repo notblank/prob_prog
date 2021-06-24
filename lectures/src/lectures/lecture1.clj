@@ -48,6 +48,12 @@
        (take 100
              (take-nth 20 (drop 1000 (doquery :lmh lin-fun []))))))
 
+;; observations:
+(def obs-data
+  (map merge 
+       (make-map :x [0 1 2 3 4 5 6])
+       (make-map :y [0.6 0.7 1.2 3.2 6.8 8.2 8.4])))
+
 ;; Honseok Homework 1:
 (defn uncps [f]
   (let [continuation (fn [x y] x)
@@ -79,19 +85,98 @@
 
 
 (def line-plot
-  {:data {:values y=fx-plot}
-   :encoding {:x {:field "x" :type "quantitative"}
-              :y {:field "y" :type "quantitative"}
-              :color {:field "f" 
-                      :type "nominal"
-                      :legend false}}
-   :mark "line"})
+  {:layer
+   [
+    {:data {:values y=fx-plot}
+     :encoding {:x {:field "x" :type "quantitative"}
+                :y {:field "y" :type "quantitative"}
+                :color {:field "f" 
+                        :type "nominal"
+                        :legend false}}
+     :mark "line"},
+    {:data {:values obs-data}
+     :encoding {:x {:field "x" :type "quantitative"}
+                :y {:field "y" :type "quantitative"}}
+     :mark "point"}
+    ]})
 
+;; Change point:
+;; defm: defn in anglican:
+(defm add-changepoints [F l u]
+  (if (sample (flip 0.5)) 
+    (F)
+    (if (sample (flip 0.5))
+       (let [cp1 (sample 
+                   (uniform-continuous l u))
+             f1 (F)
+             f2 (F)]
+         (fn [x] (if (< x cp1) (f1 x) (f2 x))))
+       (let [cp1 (sample
+                   (uniform-continuous l u))
+             cp2 (sample 
+                   (uniform-continuous cp1 u))
+             f1 (F)
+             f2 (F)
+             f3 (F)]
+         (fn [x] (if (< x cp1) 
+                   (f1 x)
+                   (if (< x cp2) 
+                     (f2 x)
+                     (f3 x)))))))) 
+
+(defquery pw-lin-fun []
+  (let [F (fn []
+            (let [a0 (sample (normal 0 6))
+                  a1 (sample (normal 0 2))]
+              (fn [x] (+ (* a1 x) a0))))
+            f (add-changepoints F 0 6)]
+    (observe (normal (f 0) 0.5) 0.6)
+    (observe (normal (f 1) 0.5) 0.7)
+    (observe (normal (f 2) 0.5) 1.2)
+    (observe (normal (f 3) 0.5) 3.2)
+    (observe (normal (f 4) 0.5) 6.8)
+    (observe (normal (f 5) 0.5) 8.2)
+    (observe (normal (f 6) 0.5) 8.4)
+    f))
+
+(def lazy-sample-pwl-funs 
+  (map :result 
+       (take 100
+             (take-nth 100 (drop 1000 (doquery :lmh pw-lin-fun []))))))
+
+(def sample-pwl-funs
+  (map uncps lazy-sample-pwl-funs))
+
+(def y=fpwx (map xy sample-pwl-funs))
+
+;; add f number:
+(def y=fpwx-plot
+  (flatten
+    (for [i (range (count y=fpwx))]
+      (map merge (nth y=fpwx i) (make-map :f (repeat (count xrange) i))))))
+
+(def pwl-plot
+  {:layer
+   [
+    {:data {:values y=fpwx-plot}
+     :encoding {:x {:field "x" :type "quantitative"}
+                :y {:field "y" :type "quantitative"}
+                :color {:field "f" 
+                        :type "nominal"
+                        :legend false}}
+     :mark "line"},
+    {:data {:values obs-data}
+     :encoding {:x {:field "x" :type "quantitative"}
+                :y {:field "y" :type "quantitative"}}
+     :mark "point"}
+    ]})
+
+;; Render the plot
 (def viz
   [:div
    [:vega-lite scatter-plot]
-   [:vega-lite line-plot]])
+   [:vega-lite line-plot]
+   [:vega-lite pwl-plot]])
 
-;; Render the plot
 (oz/view! viz)
 
