@@ -100,6 +100,7 @@
      :mark "point"}
     ]})
 
+
 ;; Change point:
 ;; defm: defn in anglican:
 (defm add-changepoints [F l u]
@@ -142,18 +143,18 @@
 (def lazy-sample-pwl-funs 
   (map :result 
        (take 100
-             (take-nth 100 (drop 1000 (doquery :lmh pw-lin-fun []))))))
+             (take-nth 200 (drop 2000 (doquery :lmh pw-lin-fun []))))))
 
 (def sample-pwl-funs
   (map uncps lazy-sample-pwl-funs))
 
-(def y=fpwx (map xy sample-pwl-funs))
+(def y=fpwlx (map xy sample-pwl-funs))
 
 ;; add f number:
-(def y=fpwx-plot
+(def y=fpwlx-plot
   (flatten
-    (for [i (range (count y=fpwx))]
-      (map merge (nth y=fpwx i) (make-map :f (repeat (count xrange) i))))))
+    (for [i (range (count y=fpwlx))]
+      (map merge (nth y=fpwlx i) (make-map :f (repeat (count xrange) i))))))
 
 (def pwl-plot
   {:layer
