@@ -159,7 +159,7 @@
 (def pwl-plot
   {:layer
    [
-    {:data {:values y=fpwx-plot}
+    {:data {:values y=fpwlx-plot}
      :encoding {:x {:field "x" :type "quantitative"}
                 :y {:field "y" :type "quantitative"}
                 :color {:field "f" 
